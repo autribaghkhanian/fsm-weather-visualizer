@@ -1,25 +1,34 @@
 import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
-import 'bootstrap/dist/css/bootstrap.min.css';
+import {transitions, initialState, type State, type Event} from './fsm';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+let currentState: State = initialState;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const stateEl = document.getElementById('current-state')!;
+const buttonsEl = document.getElementById('event-buttons')!;
+
+function render() {
+    stateEl.innerText = `Current state: ${currentState.toUpperCase()}`;
+    buttonsEl.innerHTML = '';
+
+    const possibleEvents = transitions
+        .filter(t => t.from === currentState)
+        .map(t => t.on);
+
+    possibleEvents.forEach(event => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-primary';
+        btn.innerText = event.replace('_', ' ');
+        btn.onclick = () => handleEvent(event);
+        buttonsEl.appendChild(btn);
+    });
+}
+
+function handleEvent(event: Event) {
+    const next = transitions.find(t => t.from === currentState && t.on === event);
+    if (next) {
+        currentState = next.to;
+        render();
+    }
+}
+
+render();
